@@ -1,5 +1,5 @@
 
-#Dieser Code öffnet Youtube, sucht nach einem Begirff, öffnet das erste Video und notiert Titel des Videos und ersten 10 Empfehlungen 
+#Dieser Code öffnet Youtube, sucht nach einem Begirff, öffnet das erste Video und notiert Titel des Videos und ersten 10 Empfehlungen in eine .csv
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -56,7 +56,7 @@ try:
         print("Fehler beim Abrufen der empfohlenen Videos:", e)
 
     # Speichern in einer CSV-Datei
-    csv_filename = "youtube_videos_with_recommendations.csv"
+    csv_filename = "youtube_video_data_2.0.csv"
     try:
         with open(csv_filename, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)

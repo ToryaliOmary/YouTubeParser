@@ -109,4 +109,4 @@ def explore_youtube_recommendations(search_query, depth, output_file):
 # Funktion aufrufen
 if __name__ == "__main__":
     # Beispielaufruf mit Suche nach "Elsa verboten" und einer Tiefe von 4
-    explore_youtube_recommendations(search_query="Elsa verboten", depth=4, output_file="youtube_recommendations.csv")
+    explore_youtube_recommendations(search_query="Pferde", depth=3, output_file="youtube_recommendations_test.csv")

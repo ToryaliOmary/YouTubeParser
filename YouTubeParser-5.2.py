@@ -19,15 +19,13 @@ def extract_video_short_description(driver):
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#description-inline-expander"))
         )
-        time.sleep(2)  # Zusätzliche Wartezeit, falls nötig
-
-        # Prüfen, ob ein "Mehr anzeigen"-Button existiert, und klicken
+        time.sleep(2)
         try:
             expand_button = WebDriverWait(driver, 5).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "#description-inline-expander"))
             )
             expand_button.click()
-            print("'Mehr anzeigen'-Button wurde gefunden und geklickt.")
+            #print("'Mehr anzeigen'-Button wurde gefunden und geklickt.")
             time.sleep(2)
         except Exception:
             print("'Mehr anzeigen'-Button nicht gefunden. Fährt mit der vorhandenen Beschreibung fort.")
@@ -37,7 +35,7 @@ def extract_video_short_description(driver):
             EC.visibility_of_element_located((By.CSS_SELECTOR, "#description-inline-expander > yt-attributed-string"))
         )
         description_text = description_element.text.strip()
-        print(f"Kurzbeschreibung extrahiert: {description_text}")
+        #print(f"Kurzbeschreibung extrahiert: {description_text}")
         return description_text
     except Exception as e:
         print(f"Fehler beim Extrahieren der Kurzbeschreibung: {e}")
@@ -83,9 +81,10 @@ def explore_youtube_videos(search_query, depth, output_file):
     try:
         video_counter = 1
         all_data = []
+        visited_titles = []  #Liste für alle bereits besuchten Titel
 
         # YouTube öffnen und Suche durchführen, Shorts ausschließen
-        search_url = f"https://www.youtube.com/results?search_query={search_query} -shorts"
+        search_url = f"https://www.youtube.com/results?search_query={search_query}&sp=EgIQAQ%3D%3D"
         driver.get(search_url)
         time.sleep(3)
 
@@ -101,30 +100,44 @@ def explore_youtube_videos(search_query, depth, output_file):
 
         # Beschreibung des ersten Videos extrahieren
         current_video_description = extract_video_short_description(driver)
-        all_data.append(["Hauptvideo", video_counter, current_video_title, current_video_url, current_video_description])
+        all_data.append(["Hauptvideo", f"{video_counter}", current_video_title, current_video_url, current_video_description])
+
+        visited_titles.append(current_video_title)  #Ersten Titel zur Liste hinzufügen
 
         for level in range(depth):
-            print(f"Ebene {level + 1}: Empfehlungen werden extrahiert.")
+            #print(f"Ebene {level + 1}: Empfehlungen werden extrahiert.")
 
             # Empfehlungen extrahieren
             recommendations = extract_recommended_titles(driver)
-            for idx, (title, link) in enumerate(recommendations, start=1):
-                print(f"{video_counter}.{idx} Empfehlung: {title} ({link})")
-                all_data.append(["Empfehlung", f"{video_counter}.{idx}", title, link, ""])
+            recommendation_counter = 1  #Zähler für Empfehlungen des aktuellen Hauptvideos
 
-            if recommendations:
-                next_video_title, next_video_url = recommendations[0]
+            for idx, (title, link) in enumerate(recommendations, start=1):
+                recommendation_number = f"{video_counter}.{recommendation_counter}"  #Nummerierung der Empfehlungen
+                print(f"{recommendation_number} Empfehlung: {title} ({link})")
+                all_data.append(["Empfehlung", recommendation_number, title, link, ""])
+                recommendation_counter += 1
+
+            # Nächstes unbesuchtes Video finden
+            next_video_title = None
+            next_video_url = None
+            for title, link in recommendations:
+                if title not in visited_titles:  #Prüfung, ob Titel bereits besucht wurde
+                    next_video_title = title
+                    next_video_url = link
+                    break
+
+            if next_video_title and next_video_url:
                 video_counter += 1
                 print(f"{video_counter}. Hauptvideo: {next_video_title} ({next_video_url})")
 
-                # Öffnen des neuen Videos und Beschreibung extrahieren
+                visited_titles.append(next_video_title)  #Hinzufügen des neuen Titels zur Liste
                 driver.get(next_video_url)
                 time.sleep(5)
 
                 next_video_description = extract_video_short_description(driver)
-                all_data.append(["Hauptvideo", video_counter, next_video_title, next_video_url, next_video_description])
+                all_data.append(["Hauptvideo", f"{video_counter}", next_video_title, next_video_url, next_video_description])
             else:
-                print("Keine weiteren Empfehlungen gefunden.")
+                print("Keine neuen Videos mehr gefunden.")
                 break
 
         # Daten speichern
@@ -135,4 +148,4 @@ def explore_youtube_videos(search_query, depth, output_file):
 
 # Funktion aufrufen
 if __name__ == "__main__":
-    explore_youtube_videos(search_query="Pferde", depth=3, output_file="youtube_video_date_5.2.xlsx")
+    explore_youtube_videos(search_query="Micky Maus gruselig", depth=20, output_file="YouTube_Figuren_Micky maus gruselig.xlsx")
